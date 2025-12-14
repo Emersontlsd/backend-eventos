@@ -37,8 +37,11 @@ app.use("/api/participantes/imagem", participanteImageRoutes);
 app.use("/api/usuarios/imagem", userImageRoutes);
 
 // health check
-app.get("/", (req, res) => {
-  res.redirect("/api");
+app.get("/api", (req, res) => {
+  res.json({
+    ok: true,
+    env: process.env.NODE_ENV || "production",
+  });
 });
 
 export default app;
