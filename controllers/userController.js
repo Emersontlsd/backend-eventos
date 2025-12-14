@@ -5,32 +5,29 @@ export default {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { nome, email, senha, foto, avatar } = req.body;
+      const { nome, telefone, senha } = req.body;
 
-      const data = {};
+      const user = await User.findById(id);
+      if (!user) return res.status(404).json({ erro: "Usuário não encontrado" });
 
-      if (nome) data.nome = nome;
-      if (email) data.email = email;
-      if (foto !== undefined) data.foto = foto;
-      if (avatar) data.avatar = avatar;
+      if (nome) user.nome = nome;
+      if (telefone) user.telefone = telefone;
 
+      // Atualiza senha se enviada
       if (senha) {
-        data.senha = bcrypt.hashSync(senha, 10);
+        const salt = bcrypt.genSaltSync(10);
+        user.senha = bcrypt.hashSync(senha, salt);
       }
 
-      const user = await User.findByIdAndUpdate(
-        id,
-        data,
-        { new: true }
-      ).select("-senha");
+      await user.save();
 
-      if (!user) {
-        return res.status(404).json({ erro: "Usuário não encontrado" });
-      }
+      const userData = user.toObject();
+      delete userData.senha; // remove senha do retorno
 
-      res.json(user);
+      res.json(userData);
 
     } catch (err) {
+      console.error(err);
       res.status(500).json({ erro: "Erro ao atualizar usuário" });
     }
   }
