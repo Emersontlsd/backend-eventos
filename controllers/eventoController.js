@@ -2,7 +2,6 @@ import Evento from "../models/Evento.js";
 import Participante from "../models/Participante.js";
 
 export default {
-  // Listar todos os eventos com participantes e ingressos populados
   async listar(req, res) {
     try {
       const eventos = await Evento.find()
@@ -18,7 +17,9 @@ export default {
   async buscarPorId(req, res) {
     try {
       const { id } = req.params;
-      const evento = await Evento.findById(id).populate("participantes"); // popula participantes
+      const evento = await Evento.findById(id)
+        .populate("participantes")
+        .populate("ingressos");
       if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
       res.json(evento);
     } catch (err) {
@@ -27,13 +28,9 @@ export default {
     }
   },
 
-  // Criar novo evento
   async criar(req, res) {
     try {
-      const { nome, local, data } = req.body;
-      if (!nome || !local || !data) return res.status(400).json({ erro: "Preencha todos os campos" });
-
-      const evento = await Evento.create({ nome, local, data });
+      const evento = await Evento.create(req.body);
       res.json(evento);
     } catch (err) {
       console.error(err);
@@ -41,37 +38,17 @@ export default {
     }
   },
 
-  // Adicionar participante a um evento
-  async adicionarParticipante(req, res) {
+  async atualizar(req, res) {
     try {
-      const { idEvento, idParticipante } = req.params;
-
-      const evento = await Evento.findById(idEvento);
-      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
-
-      const participante = await Participante.findById(idParticipante);
-      if (!participante) return res.status(404).json({ erro: "Participante não encontrado" });
-
-      if (evento.participantes.includes(idParticipante)) {
-        return res.status(400).json({ erro: "Participante já está no evento" });
-      }
-
-      evento.participantes.push(idParticipante);
-      await evento.save();
-
-      // Retorna o evento populado
-      const updatedEvento = await Evento.findById(idEvento)
-        .populate("participantes")
-        .populate("ingressos");
-
-      res.json(updatedEvento);
+      const { id } = req.params;
+      const evento = await Evento.findByIdAndUpdate(id, req.body, { new: true });
+      res.json(evento);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ erro: "Erro ao adicionar participante" });
+      res.status(500).json({ erro: "Erro ao atualizar evento" });
     }
   },
 
-  // Deletar evento
   async deletar(req, res) {
     try {
       const { id } = req.params;
@@ -79,7 +56,49 @@ export default {
       res.json({ ok: true });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ erro: "Erro ao deletar evento" });
+      res.status(500).json({ erro: "Erro ao remover evento" });
     }
   },
+
+  // Adiciona participante
+  async addParticipant(req, res) {
+    try {
+      const { id } = req.params; // id do evento
+      const { participantId } = req.body;
+
+      const evento = await Evento.findById(id);
+      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
+
+      // evita duplicidade
+      if (!evento.participantes.includes(participantId)) {
+        evento.participantes.push(participantId);
+        await evento.save();
+      }
+
+      const updatedEvento = await Evento.findById(id).populate("participantes");
+      res.json(updatedEvento);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao adicionar participante" });
+    }
+  },
+
+  // Remove participante
+  async removeParticipant(req, res) {
+    try {
+      const { id, participantId } = req.params; // id do evento + participante
+
+      const evento = await Evento.findById(id);
+      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
+
+      evento.participantes = evento.participantes.filter(p => p.toString() !== participantId);
+      await evento.save();
+
+      const updatedEvento = await Evento.findById(id).populate("participantes");
+      res.json(updatedEvento);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao remover participante" });
+    }
+  }
 };

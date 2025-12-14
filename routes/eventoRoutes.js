@@ -3,13 +3,14 @@ import eventoController from "../controllers/eventoController.js";
 
 const r = express.Router();
 
-// CRUD de eventos
 r.get("/", eventoController.listar);
-r.post("/", eventoController.criar);
-r.delete("/:id", eventoController.deletar);
 r.get("/:id", eventoController.buscarPorId);
+r.post("/", eventoController.criar);
+r.put("/:id", eventoController.atualizar);
+r.delete("/:id", eventoController.deletar);
 
-// Adicionar participante
-r.post("/:idEvento/participantes/:idParticipante", eventoController.adicionarParticipante);
+// rotas de participantes
+r.post("/:id/participantes", eventoController.addParticipant);
+r.delete("/:id/participantes/:participantId", eventoController.removeParticipant);
 
 export default r;
