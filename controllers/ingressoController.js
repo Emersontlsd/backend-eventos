@@ -4,66 +4,63 @@ import Participante from "../models/Participante.js";
 
 export default {
   async listar(req, res) {
-    try {
-      const ingressos = await Ingresso.find()
-        .populate("evento")
-        .populate("participante");
-      res.json(ingressos);
-    } catch {
-      res.status(500).json({ erro: "Erro ao listar ingressos" });
-    }
+    const ingressos = await Ingresso.find()
+      .populate("evento")
+      .populate("participante");
+
+    res.json(ingressos);
   },
 
   async listarPorEvento(req, res) {
-    try {
-      const ingressos = await Ingresso.find({
-        evento: req.params.eventoId,
-      }).populate("evento participante");
+    const ingressos = await Ingresso.find({ evento: req.params.eventoId })
+      .populate("evento")
+      .populate("participante");
 
-      res.json(ingressos);
-    } catch {
-      res.status(500).json({ erro: "Erro ao listar ingressos" });
-    }
+    res.json(ingressos);
   },
 
   async criar(req, res) {
     try {
       const { evento, participante } = req.body;
 
-      if (!(await Evento.findById(evento))) {
+      const ev = await Evento.findById(evento);
+      if (!ev) {
         return res.status(404).json({ erro: "Evento não encontrado" });
       }
 
-      if (!(await Participante.findById(participante))) {
+      // 🚫 BLOQUEIO: evento já ocorreu
+      if (ev.data && new Date(ev.data) < new Date()) {
+        return res.status(400).json({
+          erro: "Não é possível emitir ingresso para evento já realizado"
+        });
+      }
+
+      const part = await Participante.findById(participante);
+      if (!part) {
         return res.status(404).json({ erro: "Participante não encontrado" });
       }
 
       const novo = await Ingresso.create({ evento, participante });
-      res.status(201).json(novo);
-    } catch {
-      res.status(400).json({ erro: "Erro ao criar ingresso" });
+      res.json(novo);
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao emitir ingresso" });
     }
   },
 
   async atualizar(req, res) {
-    try {
-      const ingresso = await Ingresso.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
-      res.json(ingresso);
-    } catch {
-      res.status(400).json({ erro: "Erro ao atualizar ingresso" });
-    }
+    const result = await Ingresso.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(result);
   },
 
   async deletar(req, res) {
-    try {
-      await Ingresso.findByIdAndDelete(req.params.id);
-      res.status(204).end();
-    } catch {
-      res.status(400).json({ erro: "Erro ao deletar ingresso" });
-    }
-  },
+    await Ingresso.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  }
 };
