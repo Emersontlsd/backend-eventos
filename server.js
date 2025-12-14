@@ -19,6 +19,8 @@ import ingressoRoutes from './routes/ingressoRoutes.js';
 import relatorioRoutes from './routes/relatorioRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 
+import adminRoutes from "./routes/adminRoutes.js";
+
 import participanteImageRoutes from './routes/participanteImageRoutes.js';
 import userImageRoutes from './routes/userImageRoutes.js';
 
@@ -36,6 +38,8 @@ app.use('/participantes', participanteRoutes);
 app.use('/ingressos', ingressoRoutes);
 app.use('/relatorios', relatorioRoutes);
 app.use('/usuarios', userRoutes);
+
+app.use("/admins", adminRoutes);
 
 // rotas de upload de imagem
 app.use('/participantes/imagem', participanteImageRoutes);
