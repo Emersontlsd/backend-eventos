@@ -1,5 +1,5 @@
-import Evento from '../models/Evento.js';
-import Ingresso from '../models/Ingresso.js';
+import Evento from "../models/Evento.js";
+import Ingresso from "../models/Ingresso.js";
 
 export default {
   async eventos(req, res) {
@@ -12,8 +12,8 @@ export default {
         totalIngressos: ingressos.length,
         eventos,
       });
-    } catch (err) {
-      res.status(500).json({ erro: 'Erro ao gerar relatório' });
+    } catch {
+      res.status(500).json({ erro: "Erro ao gerar relatório" });
     }
   },
 };

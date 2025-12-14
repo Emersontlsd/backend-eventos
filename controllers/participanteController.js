@@ -1,17 +1,21 @@
-import Participante from '../models/Participante.js';
+import Participante from "../models/Participante.js";
 
 export default {
   async listar(req, res) {
-    const lista = await Participante.find();
-    res.json(lista);
+    try {
+      const lista = await Participante.find();
+      res.json(lista);
+    } catch {
+      res.status(500).json({ erro: "Erro ao listar participantes" });
+    }
   },
 
   async criar(req, res) {
     try {
       const novo = await Participante.create(req.body);
-      res.json(novo);
-    } catch (err) {
-      res.status(400).json({ erro: 'Erro ao criar participante' });
+      res.status(201).json(novo);
+    } catch {
+      res.status(400).json({ erro: "Erro ao criar participante" });
     }
   },
 
@@ -23,17 +27,17 @@ export default {
         { new: true }
       );
       res.json(atualizado);
-    } catch (err) {
-      res.status(400).json({ erro: 'Erro ao atualizar participante' });
+    } catch {
+      res.status(400).json({ erro: "Erro ao atualizar participante" });
     }
   },
 
   async deletar(req, res) {
     try {
       await Participante.findByIdAndDelete(req.params.id);
-      res.json({ mensagem: 'Participante removido' });
-    } catch (err) {
-      res.status(400).json({ erro: 'Erro ao deletar participante' });
+      res.status(204).end();
+    } catch {
+      res.status(400).json({ erro: "Erro ao deletar participante" });
     }
   },
 };

@@ -3,23 +3,21 @@ import upload from "../config/uploadConfig.js";
 import Participante from "../models/Participante.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
+import auth, { onlyAdmin } from "../middlewares/authMiddleware.js";
 
 const r = express.Router();
 
-const uploadCloudinary = (fileBuffer) => {
-  return new Promise((resolve, reject) => {
+const uploadCloudinary = (buffer) =>
+  new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: "participantes" },
-      (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
-      }
+      (err, result) => (err ? reject(err) : resolve(result))
     );
-    streamifier.createReadStream(fileBuffer).pipe(stream);
-  });
-};
 
-r.post("/:id", upload.single("imagem"), async (req, res) => {
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+
+r.post("/:id", auth, onlyAdmin, upload.single("imagem"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ erro: "Imagem não enviada" });
@@ -34,14 +32,13 @@ r.post("/:id", upload.single("imagem"), async (req, res) => {
 
     participante.avatar = {
       url: result.secure_url,
-      public_id: result.public_id
+      public_id: result.public_id,
     };
 
     await participante.save();
     res.json(participante);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ erro: "Erro ao fazer upload" });
   }
 });

@@ -16,22 +16,21 @@ export default {
         return res.status(400).json({ erro: "E-mail já cadastrado" });
       }
 
-      const salt = bcrypt.genSaltSync(10);
-      const hashed = bcrypt.hashSync(senha, salt);
+      const hashed = bcrypt.hashSync(senha, 10);
 
-      const user = await User.create({ nome, email, senha: hashed });
-
-      return res.json({
-        mensagem: "Usuário registrado com sucesso",
-        user: {
-          id: user._id,
-          nome: user.nome,
-          email: user.email
-        }
+      const user = await User.create({
+        nome,
+        email,
+        senha: hashed,
       });
 
-    } catch (error) {
-      return res.status(500).json({ erro: "Erro interno do servidor" });
+      res.status(201).json({
+        id: user._id,
+        nome: user.nome,
+        email: user.email,
+      });
+    } catch (err) {
+      res.status(500).json({ erro: "Erro ao registrar usuário" });
     }
   },
 
@@ -55,19 +54,17 @@ export default {
         { expiresIn: "2d" }
       );
 
-      return res.json({
-        mensagem: "Login realizado",
+      res.json({
         token,
         user: {
           id: user._id,
           nome: user.nome,
           email: user.email,
-          role: user.role
-        }
+          role: user.role,
+        },
       });
-
-    } catch (error) {
-      return res.status(500).json({ erro: "Erro interno do servidor" });
+    } catch (err) {
+      res.status(500).json({ erro: "Erro ao realizar login" });
     }
   },
 
@@ -76,35 +73,24 @@ export default {
       const { id } = req.params;
       const { nome, email, senha } = req.body;
 
-      const user = await User.findById(id);
+      const data = {};
+
+      if (nome) data.nome = nome;
+      if (email) data.email = email;
+      if (senha) data.senha = bcrypt.hashSync(senha, 10);
+
+      const user = await User.findByIdAndUpdate(id, data, { new: true });
+
       if (!user) {
         return res.status(404).json({ erro: "Usuário não encontrado" });
       }
 
-      if (email && email !== user.email) {
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          return res.status(400).json({ erro: "E-mail já está em uso" });
-        }
-      }
+      const result = user.toObject();
+      delete result.senha;
 
-      if (nome) user.nome = nome;
-      if (email) user.email = email;
-
-      if (senha) {
-        const salt = bcrypt.genSaltSync(10);
-        user.senha = bcrypt.hashSync(senha, salt);
-      }
-
-      await user.save();
-
-      const userData = user.toObject();
-      delete userData.senha;
-
-      return res.json(userData);
-
-    } catch (error) {
-      return res.status(500).json({ erro: "Erro interno do servidor" });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ erro: "Erro ao atualizar usuário" });
     }
-  }
+  },
 };

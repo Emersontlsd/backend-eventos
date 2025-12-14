@@ -1,12 +1,13 @@
-import express from 'express';
-import controller from '../controllers/ingressoController.js';
+import express from "express";
+import controller from "../controllers/ingressoController.js";
+import auth from "../middlewares/authMiddleware.js";
 
 const r = express.Router();
 
-r.get('/', controller.listar);
-r.get('/evento/:eventoId', controller.listarPorEvento);
-r.post('/', controller.criar);
-r.put('/:id', controller.atualizar);
-r.delete('/:id', controller.deletar);
+r.get("/", auth, controller.listar);
+r.get("/evento/:eventoId", auth, controller.listarPorEvento);
+r.post("/", auth, controller.criar);
+r.put("/:id", auth, controller.atualizar);
+r.delete("/:id", auth, controller.deletar);
 
 export default r;
