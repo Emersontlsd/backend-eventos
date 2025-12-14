@@ -10,6 +10,8 @@ import participanteRoutes from "../routes/participanteRoutes.js";
 import ingressoRoutes from "../routes/ingressoRoutes.js";
 import relatorioRoutes from "../routes/relatorioRoutes.js";
 import userRoutes from "../routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
 
 import participanteImageRoutes from "../routes/participanteImageRoutes.js";
 import userImageRoutes from "../routes/userImageRoutes.js";
@@ -31,6 +33,7 @@ app.use("/api/participantes", participanteRoutes);
 app.use("/api/ingressos", ingressoRoutes);
 app.use("/api/relatorios", relatorioRoutes);
 app.use("/api/usuarios", userRoutes);
+app.use("/api/admins", adminRoutes);
 
 // uploads
 app.use("/api/participantes/imagem", participanteImageRoutes);
