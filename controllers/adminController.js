@@ -1,10 +1,11 @@
-import User from "../models/User.js";
+import Admin from "../models/Admin.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export default {
   async listar(req, res) {
     try {
-      const admins = await User.find({ role: "admin" });
+      const admins = await Admin.find({}, "-senha"); // não retorna senha
       res.json(admins);
     } catch (err) {
       console.error(err);
@@ -19,17 +20,16 @@ export default {
         return res.status(400).json({ erro: "Preencha todos os campos" });
       }
 
-      const exists = await User.findOne({ email });
-      if (exists) return res.status(400).json({ erro: "E-mail já cadastrado" });
+      const exists = await Admin.findOne({ email });
+      if (exists) {
+        return res.status(400).json({ erro: "Email já cadastrado" });
+      }
 
-      const hashed = bcrypt.hashSync(senha, 10);
+      const admin = await Admin.create({ nome, email, senha });
+      const adminData = admin.toObject();
+      delete adminData.senha;
 
-      const admin = await User.create({ nome, email, senha: hashed, role: "admin" });
-
-      res.json({
-        mensagem: "Administrador criado com sucesso",
-        admin: { id: admin._id, nome: admin.nome, email: admin.email, role: admin.role }
-      });
+      res.json(adminData);
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: "Erro ao criar administrador" });
@@ -38,11 +38,9 @@ export default {
 
   async deletar(req, res) {
     try {
-      const admin = await User.findById(req.params.id);
-      if (!admin) return res.status(404).json({ erro: "Administrador não encontrado" });
-
-      await admin.remove();
-      res.json({ mensagem: "Administrador removido" });
+      const { id } = req.params;
+      await Admin.findByIdAndDelete(id);
+      res.json({ ok: true });
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: "Erro ao deletar administrador" });
