@@ -2,7 +2,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import serverless from 'serverless-http';
 
 import connectDB from '../config/db.js';
 
@@ -19,10 +18,11 @@ import userImageRoutes from '../routes/userImageRoutes.js';
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Conectar no MongoDB (usa cache interno em config/db.js)
+// conexão Mongo (cacheada)
 await connectDB();
 
 // rotas
@@ -33,15 +33,14 @@ app.use('/ingressos', ingressoRoutes);
 app.use('/relatorios', relatorioRoutes);
 app.use('/usuarios', userRoutes);
 
-// rotas de upload (Cloudinary)
+// uploads
 app.use('/participantes/imagem', participanteImageRoutes);
 app.use('/usuarios/imagem', userImageRoutes);
 
-// saúde simples
+// health check
 app.get('/', (req, res) =>
   res.json({ ok: true, env: process.env.NODE_ENV || 'production' })
 );
 
-// exporta handler para Vercel
-export const handler = serverless(app);
-export default handler;
+// 🚀 Vercel entende isso automaticamente
+export default app;
