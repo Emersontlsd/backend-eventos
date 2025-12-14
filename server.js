@@ -18,34 +18,12 @@ import participanteRoutes from './routes/participanteRoutes.js';
 import ingressoRoutes from './routes/ingressoRoutes.js';
 import relatorioRoutes from './routes/relatorioRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import adminRoutes from "./routes/adminRoutes.js";
+
 import participanteImageRoutes from './routes/participanteImageRoutes.js';
 import userImageRoutes from './routes/userImageRoutes.js';
 
 const app = express();
-
-// 🔧 CORS configurado para frontend Vercel + localhost
-const allowedOrigins = [
-  "https://plataforma-eventos-bay.vercel.app",
-  "http://localhost:5173"
-];
-
-app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true); // Postman ou server-to-server
-    if(allowedOrigins.indexOf(origin) === -1){
-      const msg = `Acesso bloqueado pelo CORS: ${origin}`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  credentials: true
-}));
-
-// garante que o preflight seja respondido
-app.options("*", cors());
-
+app.use(cors());
 app.use(express.json());
 
 // conectar MongoDB
@@ -58,19 +36,18 @@ app.use('/participantes', participanteRoutes);
 app.use('/ingressos', ingressoRoutes);
 app.use('/relatorios', relatorioRoutes);
 app.use('/usuarios', userRoutes);
-app.use("/admins", adminRoutes);
 
 // rotas de upload de imagem
 app.use('/participantes/imagem', participanteImageRoutes);
 app.use('/usuarios/imagem', userImageRoutes);
 
-// health check
+// porta local
+const PORT = process.env.PORT || 3333;
+
 app.get("/", (req, res) => {
   res.json({ status: "API online" });
 });
 
-// porta
-const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {
   console.log(`🚀 Backend rodando na porta ${PORT}`);
 });
