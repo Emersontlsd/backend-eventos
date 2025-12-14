@@ -15,6 +15,18 @@ export default {
     }
   },
 
+  async buscarPorId(req, res) {
+    try {
+      const { id } = req.params;
+      const evento = await Evento.findById(id).populate("participantes"); // popula participantes
+      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
+      res.json(evento);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao buscar evento" });
+    }
+  },
+
   // Criar novo evento
   async criar(req, res) {
     try {

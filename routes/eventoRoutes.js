@@ -7,6 +7,7 @@ const r = express.Router();
 r.get("/", eventoController.listar);
 r.post("/", eventoController.criar);
 r.delete("/:id", eventoController.deletar);
+r.get("/:id", eventoController.buscarPorId);
 
 // Adicionar participante
 r.post("/:idEvento/participantes/:idParticipante", eventoController.adicionarParticipante);
