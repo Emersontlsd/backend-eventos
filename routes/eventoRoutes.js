@@ -1,13 +1,14 @@
 import express from "express";
-import controller from "../controllers/eventoController.js";
-import auth, { onlyAdmin } from "../middlewares/authMiddleware.js";
+import eventoController from "../controllers/eventoController.js";
 
 const r = express.Router();
 
-r.get("/", auth, controller.listar);
-r.get("/:id", auth, controller.buscarPorId);
-r.post("/", auth, onlyAdmin, controller.criar);
-r.put("/:id", auth, onlyAdmin, controller.atualizar);
-r.delete("/:id", auth, onlyAdmin, controller.deletar);
+// CRUD de eventos
+r.get("/", eventoController.listar);
+r.post("/", eventoController.criar);
+r.delete("/:id", eventoController.deletar);
+
+// Adicionar participante
+r.post("/:idEvento/participantes/:idParticipante", eventoController.adicionarParticipante);
 
 export default r;

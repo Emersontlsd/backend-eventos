@@ -1,56 +1,73 @@
 import Evento from "../models/Evento.js";
+import Participante from "../models/Participante.js";
 
 export default {
+  // Listar todos os eventos com participantes e ingressos populados
   async listar(req, res) {
     try {
-      const eventos = await Evento.find().populate("participantes");
+      const eventos = await Evento.find()
+        .populate("participantes")
+        .populate("ingressos");
       res.json(eventos);
-    } catch {
+    } catch (err) {
+      console.error(err);
       res.status(500).json({ erro: "Erro ao listar eventos" });
     }
   },
 
-  async buscarPorId(req, res) {
-    try {
-      const evento = await Evento.findById(req.params.id).populate("participantes");
-      if (!evento) {
-        return res.status(404).json({ erro: "Evento não encontrado" });
-      }
-      res.json(evento);
-    } catch {
-      res.status(500).json({ erro: "Erro ao buscar evento" });
-    }
-  },
-
+  // Criar novo evento
   async criar(req, res) {
     try {
-      const novo = await Evento.create(req.body);
-      res.status(201).json(novo);
-    } catch {
-      res.status(400).json({ erro: "Erro ao criar evento" });
+      const { nome, local, data } = req.body;
+      if (!nome || !local || !data) return res.status(400).json({ erro: "Preencha todos os campos" });
+
+      const evento = await Evento.create({ nome, local, data });
+      res.json(evento);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao criar evento" });
     }
   },
 
-  async atualizar(req, res) {
+  // Adicionar participante a um evento
+  async adicionarParticipante(req, res) {
     try {
-      const atualizado = await Evento.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      ).populate("participantes");
+      const { idEvento, idParticipante } = req.params;
 
-      res.json(atualizado);
-    } catch {
-      res.status(400).json({ erro: "Erro ao atualizar evento" });
+      const evento = await Evento.findById(idEvento);
+      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
+
+      const participante = await Participante.findById(idParticipante);
+      if (!participante) return res.status(404).json({ erro: "Participante não encontrado" });
+
+      if (evento.participantes.includes(idParticipante)) {
+        return res.status(400).json({ erro: "Participante já está no evento" });
+      }
+
+      evento.participantes.push(idParticipante);
+      await evento.save();
+
+      // Retorna o evento populado
+      const updatedEvento = await Evento.findById(idEvento)
+        .populate("participantes")
+        .populate("ingressos");
+
+      res.json(updatedEvento);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao adicionar participante" });
     }
   },
 
+  // Deletar evento
   async deletar(req, res) {
     try {
-      await Evento.findByIdAndDelete(req.params.id);
-      res.status(204).end();
-    } catch {
-      res.status(400).json({ erro: "Erro ao deletar evento" });
+      const { id } = req.params;
+      await Evento.findByIdAndDelete(id);
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ erro: "Erro ao deletar evento" });
     }
   },
 };
