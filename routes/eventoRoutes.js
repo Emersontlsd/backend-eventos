@@ -10,7 +10,6 @@ r.put("/:id", eventoController.atualizar);
 r.delete("/:id", eventoController.deletar);
 
 // rotas de participantes
-r.post("/:id/participantes", eventoController.addParticipant);
-r.delete("/:id/participantes/:participantId", eventoController.removeParticipant);
+
 
 export default r;

@@ -1,33 +1,59 @@
 import Evento from "../models/Evento.js";
-import Participante from "../models/Participante.js";
+import Ingresso from "../models/Ingresso.js";
 
 export default {
+  // LISTAR EVENTOS
   async listar(req, res) {
     try {
-      const eventos = await Evento.find()
-        .populate("participantes")
-        .populate("ingressos");
-      res.json(eventos);
+      const eventos = await Evento.find().lean();
+
+      const eventosComDados = await Promise.all(
+        eventos.map(async (evento) => {
+          const ingressos = await Ingresso.find({ evento: evento._id });
+          return {
+            ...evento,
+            totalIngressos: ingressos.length,
+          };
+        })
+      );
+
+      res.json(eventosComDados);
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: "Erro ao listar eventos" });
     }
   },
 
+  // BUSCAR EVENTO POR ID (DETALHE)
   async buscarPorId(req, res) {
     try {
       const { id } = req.params;
-      const evento = await Evento.findById(id)
-        .populate("participantes")
-        .populate("ingressos");
-      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
-      res.json(evento);
+
+      const evento = await Evento.findById(id).lean();
+      if (!evento) {
+        return res.status(404).json({ erro: "Evento não encontrado" });
+      }
+
+      const ingressos = await Ingresso.find({ evento: id })
+        .populate("participante")
+        .lean();
+
+      const participantes = ingressos
+        .map(i => i.participante)
+        .filter(Boolean);
+
+      res.json({
+        ...evento,
+        totalIngressos: ingressos.length,
+        participantes,
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ erro: "Erro ao buscar evento" });
     }
   },
 
+  // CRIAR EVENTO
   async criar(req, res) {
     try {
       const evento = await Evento.create(req.body);
@@ -38,6 +64,7 @@ export default {
     }
   },
 
+  // ATUALIZAR EVENTO
   async atualizar(req, res) {
     try {
       const { id } = req.params;
@@ -49,6 +76,7 @@ export default {
     }
   },
 
+  // DELETAR EVENTO
   async deletar(req, res) {
     try {
       const { id } = req.params;
@@ -59,46 +87,4 @@ export default {
       res.status(500).json({ erro: "Erro ao remover evento" });
     }
   },
-
-  // Adiciona participante
-  async addParticipant(req, res) {
-    try {
-      const { id } = req.params; // id do evento
-      const { participantId } = req.body;
-
-      const evento = await Evento.findById(id);
-      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
-
-      // evita duplicidade
-      if (!evento.participantes.includes(participantId)) {
-        evento.participantes.push(participantId);
-        await evento.save();
-      }
-
-      const updatedEvento = await Evento.findById(id).populate("participantes");
-      res.json(updatedEvento);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ erro: "Erro ao adicionar participante" });
-    }
-  },
-
-  // Remove participante
-  async removeParticipant(req, res) {
-    try {
-      const { id, participantId } = req.params; // id do evento + participante
-
-      const evento = await Evento.findById(id);
-      if (!evento) return res.status(404).json({ erro: "Evento não encontrado" });
-
-      evento.participantes = evento.participantes.filter(p => p.toString() !== participantId);
-      await evento.save();
-
-      const updatedEvento = await Evento.findById(id).populate("participantes");
-      res.json(updatedEvento);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ erro: "Erro ao remover participante" });
-    }
-  }
 };
